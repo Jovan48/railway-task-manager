@@ -9,7 +9,7 @@ def get_db():
 
 @app.route("/")
 def index():
-    return jsonify({"message": "Task Manager API is running!"})
+    return jsonify({"message": "Task Manager API v2 - CI/CD works!"})
 
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
