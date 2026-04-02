@@ -52,15 +52,5 @@ def delete_task(task_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-```
 
-Create `requirements.txt`:
-```
-flask
-psycopg2-binary
-gunicorn
-```
 
-Create `Procfile` (no file extension):
-```
-web: gunicorn app:app
