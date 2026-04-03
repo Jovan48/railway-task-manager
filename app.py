@@ -16,24 +16,59 @@ def index():
     total = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM tasks WHERE done = true;")
     done = cur.fetchone()[0]
+    cur.execute("SELECT * FROM tasks ORDER BY id DESC;")
+    all_tasks = cur.fetchall()
+    cur.execute("SELECT * FROM tasks WHERE done = false ORDER BY due_date ASC NULLS LAST;")
+    pending_tasks = cur.fetchall()
+    cur.execute("SELECT * FROM tasks WHERE done = true ORDER BY id DESC;")
+    done_tasks = cur.fetchall()
     cur.close(); conn.close()
-    return render_template("index.html", total=total, done=done, pending=total - done)
+    return render_template("index.html",
+        total=total, done=done, pending=total - done,
+        all_tasks=all_tasks, pending_tasks=pending_tasks, done_tasks=done_tasks)
 
 @app.route("/tasks")
 def tasks():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tasks ORDER BY id DESC;")
+    search = request.args.get("search", "")
+    priority = request.args.get("priority", "")
+    category = request.args.get("category", "")
+    status = request.args.get("status", "")
+    query = "SELECT * FROM tasks WHERE 1=1"
+    params = []
+    if search:
+        query += " AND title ILIKE %s"
+        params.append(f"%{search}%")
+    if priority:
+        query += " AND priority = %s"
+        params.append(priority)
+    if category:
+        query += " AND category = %s"
+        params.append(category)
+    if status == "done":
+        query += " AND done = true"
+    elif status == "pending":
+        query += " AND done = false"
+    query += " ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END, due_date ASC NULLS LAST"
+    cur.execute(query, params)
     all_tasks = cur.fetchall()
+    cur.execute("SELECT DISTINCT category FROM tasks WHERE category IS NOT NULL ORDER BY category;")
+    categories = [row[0] for row in cur.fetchall()]
     cur.close(); conn.close()
-    return render_template("tasks.html", tasks=all_tasks)
+    return render_template("tasks.html", tasks=all_tasks, categories=categories,
+        search=search, priority=priority, category=category, status=status)
 
 @app.route("/tasks/add", methods=["POST"])
 def add_task():
     title = request.form.get("title")
+    priority = request.form.get("priority", "medium")
+    category = request.form.get("category", "General")
+    due_date = request.form.get("due_date") or None
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("INSERT INTO tasks (title, done) VALUES (%s, %s);", (title, False))
+    cur.execute("INSERT INTO tasks (title, done, priority, category, due_date) VALUES (%s, %s, %s, %s, %s);",
+                (title, False, priority, category, due_date))
     conn.commit(); cur.close(); conn.close()
     flash("Task added!", "success")
     return redirect(url_for("tasks"))
@@ -44,7 +79,7 @@ def toggle_task(task_id):
     cur = conn.cursor()
     cur.execute("UPDATE tasks SET done = NOT done WHERE id = %s;", (task_id,))
     conn.commit(); cur.close(); conn.close()
-    return redirect(url_for("tasks"))
+    return redirect(request.referrer or url_for("tasks"))
 
 @app.route("/tasks/delete/<int:task_id>", methods=["POST"])
 def delete_task(task_id):
@@ -53,7 +88,7 @@ def delete_task(task_id):
     cur.execute("DELETE FROM tasks WHERE id = %s;", (task_id,))
     conn.commit(); cur.close(); conn.close()
     flash("Task deleted.", "success")
-    return redirect(url_for("tasks"))
+    return redirect(request.referrer or url_for("tasks"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

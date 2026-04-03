@@ -3,58 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager</title>
+    <title>Jovan's Task Master</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f4f8; color: #333; }
+        body { font-family: Arial, sans-serif; background: #060a0f; color: #cdd3de; min-height: 100vh; }
         nav {
-            background: #1F4E79; padding: 15px 30px;
-            display: flex; align-items: center; justify-content: space-between;
+            background: #0d1117; border-bottom: 1px solid #1e2d40;
+            padding: 12px 28px; display: flex; align-items: center; justify-content: space-between;
         }
-        nav .logo { color: white; font-size: 22px; font-weight: bold; text-decoration: none; }
-        nav ul { list-style: none; display: flex; gap: 20px; }
-        nav ul li a {
-            color: #cce3f7; text-decoration: none; font-size: 16px; padding: 6px 12px;
-            border-radius: 5px; transition: background 0.2s;
+        .logo { color: #4fc3f7; font-size: 18px; font-weight: bold; text-decoration: none; }
+        .logo span { color: #7986cb; font-size: 13px; font-weight: normal; margin-left: 8px; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a {
+            color: #8899a6; font-size: 13px; padding: 6px 14px; border-radius: 6px;
+            text-decoration: none; transition: all 0.15s;
         }
-        nav ul li a:hover, nav ul li a.active { background: #2E75B6; color: white; }
-        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        .card {
-            background: white; border-radius: 10px; padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px;
+        .nav-links a:hover, .nav-links a.active { background: #1e2d40; color: #4fc3f7; }
+        .container { max-width: 880px; margin: 0 auto; padding: 28px 20px; }
+        .flash { padding: 10px 16px; border-radius: 7px; margin-bottom: 16px; font-size: 13px; }
+        .flash.success { background: #1a3d2b; color: #56d364; border: 1px solid #1e4d33; }
+        .flash.error { background: #3d1a1a; color: #f85149; border: 1px solid #4d2222; }
+        .card { background: #0d1117; border: 1px solid #1e2d40; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+        .card-title { font-size: 11px; font-weight: bold; color: #8899a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+        .btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+        .btn-primary { background: #1e3a5f; color: #4fc3f7; border: 1px solid #1e4976; }
+        .btn-primary:hover { background: #1e4976; }
+        input, select {
+            background: #060a0f; border: 1px solid #1e2d40; border-radius: 7px;
+            padding: 8px 12px; color: #cdd3de; font-size: 13px; outline: none;
         }
-        h1 { color: #1F4E79; margin-bottom: 10px; }
-        h2 { color: #2E75B6; margin-bottom: 15px; }
-        .btn {
-            padding: 8px 18px; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block;
-        }
-        .btn-primary { background: #2E75B6; color: white; }
-        .btn-primary:hover { background: #1F4E79; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-danger:hover { background: #c0392b; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-success:hover { background: #1e8449; }
-        .flash { padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
-        .flash.success { background: #d4edda; color: #155724; }
-        .flash.error { background: #f8d7da; color: #721c24; }
+        input:focus, select:focus { border-color: #4fc3f7; }
+        input::placeholder { color: #4a5568; }
+        select option { background: #0d1117; }
+        .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+        .badge-high { background: #3d1a1a; color: #f0883e; }
+        .badge-medium { background: #2d2a14; color: #e3b341; }
+        .badge-low { background: #1a2d1a; color: #56d364; }
+        .badge-cat { background: #1a1e3d; color: #7986cb; }
+        .badge-due { background: #1e2d40; color: #8899a6; }
+        .badge-overdue { background: #3d1a1a; color: #f85149; }
     </style>
 </head>
 <body>
-    <nav>
-        <a class="logo" href="/">📋 Task Manager</a>
-        <ul>
-            <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}>Home</a></li>
-            <li><a href="/tasks" {% if request.path == '/tasks' %}class="active"{% endif %}>Tasks</a></li>
-        </ul>
-    </nav>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endwith %}
-        {% block content %}{% endblock %}
+<nav>
+    <a class="logo" href="/">Jovan's Task Master <span>v2.0</span></a>
+    <div class="nav-links">
+        <a href="/" {% if request.path == '/' %}class="active"{% endif %}>Dashboard</a>
+        <a href="/tasks" {% if request.path == '/tasks' %}class="active"{% endif %}>Tasks</a>
     </div>
+</nav>
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
 </body>
 </html>

@@ -1,39 +1,122 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .add-row input[type="text"] { flex: 1; min-width: 200px; padding: 9px 14px; }
+    .meta-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .meta-row select, .meta-row input[type="date"] { flex: 1; min-width: 140px; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-row input, .filter-row select { flex: 1; min-width: 120px; }
+    .task-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 13px 0; border-bottom: 1px solid #111a24;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .checkbox {
+        width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid #1e2d40;
+        background: #060a0f; flex-shrink: 0; display: flex; align-items: center;
+        justify-content: center; cursor: pointer; font-size: 12px; color: #56d364;
+    }
+    .checkbox.checked { background: #1a3d2b; border-color: #56d364; }
+    .task-info { flex: 1; }
+    .task-title { font-size: 14px; color: #cdd3de; }
+    .task-title.done { text-decoration: line-through; color: #4a5568; }
+    .task-meta { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+    .task-actions { display: flex; gap: 6px; }
+    .act-btn {
+        background: none; border: 1px solid #1e2d40; border-radius: 5px;
+        color: #8899a6; font-size: 11px; padding: 4px 10px; cursor: pointer;
+    }
+    .act-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
+    .act-del:hover { border-color: #f85149; color: #f85149; }
+    .empty { color: #4a5568; font-size: 13px; text-align: center; padding: 30px 0; }
+    .count { font-size: 12px; color: #4a5568; margin-bottom: 12px; }
+</style>
+
 <div class="card">
-    <h1>All Tasks</h1>
-    <form action="/tasks/add" method="POST" style="display:flex; gap:10px; margin-top:15px;">
-        <input type="text" name="title" placeholder="Enter a new task..." required
-            style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:15px;">
-        <button type="submit" class="btn btn-primary">+ Add Task</button>
+    <div class="card-title">Add New Task</div>
+    <form action="/tasks/add" method="POST">
+        <div class="add-row">
+            <input type="text" name="title" placeholder="What needs to be done?" required>
+            <button type="submit" class="btn btn-primary">+ Add Task</button>
+        </div>
+        <div class="meta-row">
+            <select name="priority">
+                <option value="high">High Priority</option>
+                <option value="medium" selected>Medium Priority</option>
+                <option value="low">Low Priority</option>
+            </select>
+            <select name="category">
+                <option value="General">General</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Study">Study</option>
+                <option value="Health">Health</option>
+                <option value="Finance">Finance</option>
+            </select>
+            <input type="date" name="due_date">
+        </div>
     </form>
 </div>
 
 <div class="card">
+    <div class="card-title">Filter & Search</div>
+    <form method="GET" action="/tasks">
+        <div class="filter-row">
+            <input type="text" name="search" placeholder="Search tasks..." value="{{ search }}">
+            <select name="status">
+                <option value="">All Status</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="done" {% if status == 'done' %}selected{% endif %}>Done</option>
+            </select>
+            <select name="priority">
+                <option value="">All Priorities</option>
+                <option value="high" {% if priority == 'high' %}selected{% endif %}>High</option>
+                <option value="medium" {% if priority == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="low" {% if priority == 'low' %}selected{% endif %}>Low</option>
+            </select>
+            <select name="category">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="count">{{ tasks|length }} task{{ 's' if tasks|length != 1 else '' }} found</div>
     {% if tasks %}
         {% for task in tasks %}
-        <div style="display:flex; align-items:center; justify-content:space-between;
-                    padding:14px 0; border-bottom:1px solid #eee;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:18px;">{% if task[2] %}✅{% else %}⬜{% endif %}</span>
-                <span style="font-size:16px; {% if task[2] %}text-decoration:line-through; color:#aaa;{% endif %}">
-                    {{ task[1] }}
-                </span>
+        <div class="task-item">
+            <form action="/tasks/toggle/{{ task[0] }}" method="POST">
+                <button type="submit" class="checkbox {% if task[2] %}checked{% endif %}">
+                    {% if task[2] %}✓{% endif %}
+                </button>
+            </form>
+            <div class="task-info">
+                <div class="task-title {% if task[2] %}done{% endif %}">{{ task[1] }}</div>
+                <div class="task-meta">
+                    <span class="badge badge-{{ task[3] if task[3] else 'medium' }}">
+                        {{ (task[3] or 'medium') | capitalize }}
+                    </span>
+                    <span class="badge badge-cat">{{ task[4] if task[4] else 'General' }}</span>
+                    {% if task[5] %}
+                        <span class="badge badge-due">Due {{ task[5].strftime('%b %d, %Y') }}</span>
+                    {% endif %}
+                </div>
             </div>
-            <div style="display:flex; gap:8px;">
-                <form action="/tasks/toggle/{{ task[0] }}" method="POST">
-                    <button type="submit" class="btn btn-success" style="font-size:12px;">
-                        {% if task[2] %}Undo{% else %}Done{% endif %}
-                    </button>
-                </form>
+            <div class="task-actions">
                 <form action="/tasks/delete/{{ task[0] }}" method="POST">
-                    <button type="submit" class="btn btn-danger" style="font-size:12px;">Delete</button>
+                    <button type="submit" class="act-btn act-del">Delete</button>
                 </form>
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <p style="color:#888; text-align:center; padding:20px;">No tasks yet. Add one above!</p>
+        <div class="empty">No tasks found. Try adjusting your filters!</div>
     {% endif %}
 </div>
 {% endblock %}
