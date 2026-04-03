@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h1>All Tasks</h1>
+    <form action="/tasks/add" method="POST" style="display:flex; gap:10px; margin-top:15px;">
+        <input type="text" name="title" placeholder="Enter a new task..." required
+            style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:15px;">
+        <button type="submit" class="btn btn-primary">+ Add Task</button>
+    </form>
+</div>
+
+<div class="card">
+    {% if tasks %}
+        {% for task in tasks %}
+        <div style="display:flex; align-items:center; justify-content:space-between;
+                    padding:14px 0; border-bottom:1px solid #eee;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:18px;">{% if task[2] %}✅{% else %}⬜{% endif %}</span>
+                <span style="font-size:16px; {% if task[2] %}text-decoration:line-through; color:#aaa;{% endif %}">
+                    {{ task[1] }}
+                </span>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <form action="/tasks/toggle/{{ task[0] }}" method="POST">
+                    <button type="submit" class="btn btn-success" style="font-size:12px;">
+                        {% if task[2] %}Undo{% else %}Done{% endif %}
+                    </button>
+                </form>
+                <form action="/tasks/delete/{{ task[0] }}" method="POST">
+                    <button type="submit" class="btn btn-danger" style="font-size:12px;">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:#888; text-align:center; padding:20px;">No tasks yet. Add one above!</p>
+    {% endif %}
+</div>
+{% endblock %}
